@@ -1,5 +1,7 @@
 # RPPtoAEP
 
+English ver -> README_eng.md
+
 皆さん御機嫌よう。まいまいです。
 
 今回はREAPERのプロジェクトファイル上のメディアオブジェクトの位置をもとに、AfterEffects上にアイテムを配置するスクリプトを作成しました。
