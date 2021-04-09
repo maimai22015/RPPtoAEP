@@ -33,7 +33,7 @@ If there is, it is a successful.
 
 ## Usage
 
-Open the project you are working on and run the script from the menu, this window will launch.
+Open the project you are working on and Select Composition on Project planel and run the script from the menu, this window will launch.
 ![image](https://user-images.githubusercontent.com/79758588/113301530-12ef7000-933a-11eb-971a-bf7eb9fdac19.png)
 
 
