@@ -39,7 +39,7 @@ RPPtoAEP.rarをダウンロードし、解凍して、.jsxファイルをAfterEf
 ![image](https://user-images.githubusercontent.com/79758588/113301511-0cf98f00-933a-11eb-84d9-19971e9eb8c8.png)
 
 ## 使い方
-動画作成中のプロジェクトを開いた状態でメニューからスクリプトを実行すると、
+動画作成中のプロジェクトを開いた状態で生成したいコンポジションをプロジェクトパネルで選択し、メニューからスクリプトを実行すると、
 
 ![image](https://user-images.githubusercontent.com/79758588/113301530-12ef7000-933a-11eb-971a-bf7eb9fdac19.png)
 
