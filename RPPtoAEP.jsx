@@ -1,6 +1,6 @@
 // rpp2aep.jsx
 // name : RPPtoAEP
-// version : 0.1
+// version : 0.2
 // author : maimai
 // website : ytpmv.info
 // discription : This is a script for After Effects that places items based on the REAPER project file.
@@ -26,6 +26,7 @@
     var LinkPropSetting = 0; // 設定共有するかどうか
     var OddItemSetting = 0; // 設定共有する際に奇数アイテムを別にリンクするか
     var GenerateMode=0;
+    var GenerateMode2=0; //レイヤーのプロパティ項目にキーフレームだけ生成するか
     var StartPosSetting = 0;
     var FolderObj = [];
 
@@ -93,9 +94,12 @@
                 addedlayer.startTime=RPPItem[i][0]-addedlayer.inPoint;
                 //尺が足りないかの判定 足りないならタイムリマップ有効。
                 if(ItemDuration<RPPItem[i][1]&&addedlayer.canSetTimeRemapEnabled){addedlayer.timeRemapEnabled=true;}
-                if(FirstItemFlag==1&&addedlayer.startTime!=0&&i!=0){ // トラック最初のアイテムが0秒開始じゃなかった場合割り込み処理
+                if(FirstItemFlag==1&&addedlayer.startTime!=0){ // トラック最初のアイテムが0秒開始じゃなかった場合割り込み処理
                     addedlayer.startTime=0;
                     addedlayer.outPoint =Number(RPPItem[i][0]);
+                    var AddedEffFlip = addedlayer.property("ADBE Effect Parade").addProperty("ADBE Geometry2");
+                    AddedEffFlip.property("ADBE Geometry2-0011").setValue(0);
+                    AddedEffFlip.property("ADBE Geometry2-0004").setValue(-100);
                     i--;
                 }else if(LastItemFlag==1){
                     addedlayer.outPoint =Number(RPPItem[i][1])+addedlayer.startTime;
@@ -120,7 +124,7 @@
             
             if(LinkPropSetting.value==1&&FirstItemFlag==1&&OddItemSetting.value==0){
                 addedlayer.name="Control";}
-            if(LinkPropSetting.value==1&&i!=0&&FirstItemFlag==0&&OddItemSetting.value==0){
+            if(LinkPropSetting.value==1&&FirstItemFlag==0&&OddItemSetting.value==0){
                 //addedlayer.property("scale").expression='thisComp.layer("Control").transform.position.valueAtTime(time-inPoint)'
                 if(addedlayer.property("anchorPoint").canSetExpression){
                     addedlayer.property("anchorPoint").expression='thisComp.layer("Control").transform.anchorPoint.valueAtTime(time-inPoint)'
@@ -191,6 +195,52 @@
 
         }
 
+    
+    }
+    // レイヤー上にキーフレーム生成
+    function run2(){
+        var selectComp = app.project.selection;
+        if(selectComp.length == 1&&selectComp[0] instanceof CompItem){
+            if(selectComp[0].selectedProperties.length==0){alert("Select a Layer and Propaties");return;}
+            if(selectComp[0].selectedLayers[0].canSetTimeRemapEnabled){
+                selectComp[0].selectedLayers[0].timeRemapEnabled=true;
+                selectComp[0].selectedLayers[0].property("Time Remap").expression='//When you want to set value,please disable expression temporarily. \
+                n = 0; \
+                if (thisProperty.numKeys > 0){n = thisProperty.nearestKey(time).index; \
+                    if (thisProperty.key(n).time > time) n--;} \
+                n > 0 ?valueAtTime(time - thisProperty.key(n).time) : valueAtTime(0); \
+                ';//参考：https://www.youtube.com/watch?v=w5zKZov4-u0
+            }
+
+
+            for(var k=0;k<selectComp[0].selectedProperties.length;k++){
+
+                if(selectComp[0].selectedLayers[0].selectedProperties[k].canSetExpression){
+                    selectComp[0].selectedLayers[0].selectedProperties[k].expression='//When you want to set value,please disable expression temporarily. \
+                    n = 0; \
+                    if (thisProperty.numKeys > 0){n = thisProperty.nearestKey(time).index; \
+                        if (thisProperty.key(n).time > time) n--;} \
+                    n > 0 ?valueAtTime(time - thisProperty.key(n).time) : valueAtTime(0); \
+                    ';
+                }
+                //selectComp[0].selectedProperties[k];
+                for(i=0;RPPItem.length>i;i++){
+                    selectComp[0].selectedProperties[k].addKey(selectComp[0].selectedLayers[0].inPoint+RPPItem[i][0]);
+                    if(selectComp[0].selectedLayers[0].canSetTimeRemapEnabled){
+                        selectComp[0].selectedLayers[0].property("Time Remap").addKey(selectComp[0].selectedLayers[0].inPoint+RPPItem[i][0]);
+                    }
+                    if (RPPItem[i+1]==undefined||RPPItem[i+1][0]<RPPItem[i][0]){//最後のアイテムか次のアイテムが前にある場合 
+                        selectComp[0].selectedLayers[0].outPoint=RPPItem[i][0]+RPPItem[i][1]+selectComp[0].selectedLayers[0].inPoint;
+                        return;
+                    }
+                    
+                }
+                
+
+
+            }
+
+        }else{alert("Select a Compotision and Propaties")}
     }
     function setting(){
         //GetFootageItem
@@ -221,9 +271,14 @@
         var GUIItemGroupLR = GUIItemGroup.add("panel");
         GUIItemGroupLR.alignment = [ScriptUI.Alignment.LEFT,ScriptUI.Alignment.CENTER];
         GUIItemGroupLR.orientation="column";
-        GUIItemGroupLR.alignment ="fill"
-        GUIItemGroupLR.alignChildren="LEFT"
+        GUIItemGroupLR.alignment ="fill";
+        GUIItemGroupLR.alignChildren="LEFT";
         
+        var GUIItemGroup1_2 =  GUIItemGroupLR.add("group");
+        GUIItemGroup1_2.orientation="row";
+        GenerateMode2=GUIItemGroup1_2.add('dropdownlist', undefined, ["Generate New Composition","Generate Keyframe"]);
+        GenerateMode2.selection=0;
+
         var GUIItemGroup1 =  GUIItemGroupLR.add("group")
         GUIItemGroup1.orientation="row";
         GUIItemGroup1.add("statictext",undefined,"Select Item");
@@ -272,17 +327,34 @@
         GenerateMode.selection=1;
 
 
-
-
-
-
         w.btn = w.add('button', {x:0, y:0, width:130, height:26}, 'RUN', {name:'ok'});
         w.btn.onClick= function () {
             w.close();
             SelecdetItemiD = w.menu.selection.index;
             LoadRPP();
             // RPPファイルの読み込みRPPItem配列に時間を打ち込む
-            run()
+            if(GenerateMode2.selection==0){run();}
+            else if(GenerateMode2.selection==1){run2();}
+            
+        }
+        GenerateMode2.onChange = function(){
+            if(GUIItemGroup2.visible==true){
+                GUIItemGroup1.hide();
+                GUIItemGroup2.hide();
+                GUIItemGroup3.hide();
+                GUIItemGroup4.hide();
+                GUIItemGroup5.hide();
+                GUIItemGroup6.hide();
+                GUIItemGroup7.hide();
+            }else{
+                GUIItemGroup1.show();
+                GUIItemGroup2.show();
+                GUIItemGroup3.show();
+                GUIItemGroup4.show();
+                GUIItemGroup5.show();
+                GUIItemGroup6.show();
+                GUIItemGroup7.show();
+            }
         }
         
         w.menu.selection= 0;
