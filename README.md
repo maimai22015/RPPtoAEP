@@ -50,6 +50,10 @@ RPPtoAEP.rarをダウンロードし、解凍して、.jsxファイルをAfterEf
 ### 各項目の設定について
 各項目について説明していきます。
 
+* Generate Keyframe/Generate Composition
+  * Generate Keyframeを選択した場合、選択したコンポジションの選択したアイテムの選択したプロパティとタイムスリップにキーフレームが追加されます。プロパティを選択する必要がある仕様は多分治す。
+  * Generate Compositionを選択した場合、これ以降の説明項目を設定することで、新しいコンポジションに配置されます。
+
 * .RPP
   * .RPPファイルを選択します。
 * Select Item
