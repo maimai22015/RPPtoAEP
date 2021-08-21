@@ -94,7 +94,8 @@
                 addedlayer.startTime=RPPItem[i][0]-addedlayer.inPoint;
                 //尺が足りないかの判定 足りないならタイムリマップ有効。
                 if(ItemDuration<RPPItem[i][1]&&addedlayer.canSetTimeRemapEnabled){addedlayer.timeRemapEnabled=true;}
-                if(FirstItemFlag==1&&addedlayer.startTime!=0){ // トラック最初のアイテムが0秒開始じゃなかった場合割り込み処理
+                if(FirstItemFlag==1&&addedlayer.startTime!=0&&LastItemFlag!=1){ // トラック最初のアイテムが0秒開始じゃなかった場合割り込み処理
+                    //トラックにアイテムが1個の場合無限ループに入るためLastItemFlag!=1で除外
                     addedlayer.startTime=0;
                     addedlayer.outPoint =Number(RPPItem[i][0]);
                     var AddedEffFlip = addedlayer.property("ADBE Effect Parade").addProperty("ADBE Geometry2");
