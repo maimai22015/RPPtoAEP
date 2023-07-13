@@ -1,0 +1,73 @@
+{
+    function LangSetting(){
+        switch(app.isoLanguage){
+            case "ja_JP":
+                UILanguage = "ja_JP";
+                break;
+            case "en_US":
+                UILanguage = "en_US";
+                break;
+            default:
+                UILanguage = "en_US";
+        }
+        UItext = {
+            textsample : {
+                ja_JP : "こんな感じでテキストと言語スイッチ(ここの上のコード)を書くと多言語太陽できるよ！頑張れ",en_US : "bb"
+            },
+            AlertSeceltLayerText : {
+                ja_JP : "レイヤーのプロパティを選択してください",en_US : "Select a Layer and Propaties"
+            },
+            UIGenerateMode1 : {
+                ja_JP : "新規コンポジションに生成",en_US : "Generate New Composition"
+            },
+            UIGenerateMode2 : {
+                ja_JP : "キーフレームとして生成",en_US : "Generate Keyframe"
+            },
+            UISelectFile :{
+                ja_JP : "RPPファイルを選択",en_US : "...RPP"
+            },
+            UISelectFile2 :{
+                ja_JP : "RPPファイルを選択",en_US : "Select .RPP file"
+            },
+            UISelectItem :{
+                ja_JP : "素材選択",en_US : "Select Item"
+            },
+            UICompName :{
+                ja_JP : "コンポ名",en_US : "Composition Name"
+            },
+            UIWidth :{
+                ja_JP : "横:",en_US : "width:"
+            },
+            UIHeight :{
+                ja_JP : "縦:",en_US : "height:"
+            },
+            UIStartPosition :{
+                ja_JP : "開始位置",en_US : "Start Position"
+            },
+            UIFlipLR :{
+                ja_JP : "左右反転",en_US : "Flip left/right"
+            },
+            UILinkProperties :{
+                ja_JP : "レイヤーの設定をリンク",en_US : "Link Properties"
+            },
+            UILinkProperties2 :{
+                ja_JP : "偶奇アイテムごとにリンク",en_US : "Odd Item Link Separately"
+            },
+            UIGenerateMode :{
+                ja_JP : "生成モード :",en_US : "Generate Mode: "
+            },
+            UIGenerateMode1 :{
+                ja_JP : "RPP通り生成",en_US : "Generate as per RPP"
+            },
+            UIGenerateMode2 :{
+                ja_JP : "アイテム間の隙間無し",en_US : "Without Gaps"
+            },
+            UIGenerateMode3 :{
+                ja_JP : "アイテム長さ無調整",en_US : "Don't Ajust Item Length"
+            },
+            UIRUN :{
+                ja_JP : "実行",en_US : "RUN"
+            },
+        }
+    }
+}

@@ -5,17 +5,22 @@
 // website : ytpmv.info
 // discription : This is a script for After Effects that places items based on the REAPER project file.
 // Licence : CC0
+#include "r2a.lang.jsxinc"
+//@include "r2a.lang.jsxinc"
+
 {
 
-    //変数 複数回実行を試したあと、必要なら初期化関数を用意。GUI生成後に
+    //変数 スコープの都合でここで宣言
     var RPPpath = ""; // RPPファイルのパス 公開時は空文字列にすること
     var ExportTo = 0; // 0:現在のコンポジション 1:新しいコンポジション
     var IsMultipleTrack = 0; // RPP上で複数トラックがあるかどうか
     var RPPItem =[];//[[position,length],[position,length]]
     var RPPtextP ="";
     var RPPtextL ="";
-    var WidthSetting = 1920;
-    var HaightSetting = 1080;
+    var WidthSetting = null;
+    var HeightSetting = null;
+    var WidthSettingValue = 1920;
+    var HeightSettingValue = 1080;
     var NewConpNameSetting = "NewComp(RPP2AEP)";
     var FpsSetting = 60;
     var SelecdetItemiD = 0;
@@ -30,9 +35,18 @@
     var StartPosSetting = 0;
     var FolderObj = [];
 
+    CheckDefaultRPP();
+    LangSetting();
+    UIsetting();
 
-    setting();
-
+    function CheckDefaultRPP(){
+        
+        RPPpath = new File(decodeURI(app.project.file.parent)  + "/r2a.rpp");
+        if(RPPpath.exists != true){
+            RPPpath = ""
+        }
+        
+    }
     function LoadRPP(){
         if(RPPpath !=""){
             var res= RPPpath.open('r'); //読み込み専用で開く
@@ -53,10 +67,10 @@
     function run(){
         //不正な値の修正
         if(WidthSetting.text==""){WidthSetting.text=1920;}else if(isNaN(WidthSetting.text)==true){WidthSetting.text=1920;}
-        if(HaightSetting.text==""){HaightSetting.text=1080;}else if(isNaN(HaightSetting.text)==true){HaightSetting.text=1080;}
+        if(HeightSetting.text==""){HeightSetting.text=1080;}else if(isNaN(HeightSetting.text)==true){HeightSetting.text=1080;}
         if(FpsSetting.text==""){FpsSetting.text=60;}else if(isNaN(FpsSetting.text)==true){FpsSetting.text=1080;}       
-        if(NewConpNameSetting.text!=""){var NewComp = app.project.items.addComp(NewConpNameSetting.text, Number(WidthSetting.text), Number(HaightSetting.text), 1, 120, Number(FpsSetting.text));}
-        else{var NewComp = app.project.items.addComp("NewComp(RPP2AEP)", Number(WidthSetting.text),  Number(HaightSetting.text), 1, 120, Number(FpsSetting.text));}
+        if(NewConpNameSetting.text!=""){var NewComp = app.project.items.addComp(NewConpNameSetting.text, Number(WidthSetting.text), Number(HeightSetting.text), 1, 120, Number(FpsSetting.text));}
+        else{var NewComp = app.project.items.addComp("NewComp(RPP2AEP)", Number(WidthSetting.text),  Number(HeightSetting.text), 1, 120, Number(FpsSetting.text));}
         if(FolderObj.length==0){var R2AParentFolder = app.project.items.addFolder("RPPtoAEP");}else{var R2AParentFolder = FolderObj[0];}
         
         NewComp.parentFolder =R2AParentFolder;
@@ -73,8 +87,8 @@
             // トラック一番目のアイテムの場合新コンポ生成。だたしi=0を除く
             if (FirstItemFlag==1&&i!=0){
                 j++;
-                if(NewConpNameSetting.text!=""){var NewComp = app.project.items.addComp(NewConpNameSetting.text+" "+String(j), Number(WidthSetting.text), Number(HaightSetting.text), 1, 120, Number(FpsSetting.text));}
-                else{var NewComp = app.project.items.addComp("NewComp(RPP2AEP) "+String(j), Number(WidthSetting.text),  Number(HaightSetting.text), 1, 120, Number(FpsSetting.text));}
+                if(NewConpNameSetting.text!=""){var NewComp = app.project.items.addComp(NewConpNameSetting.text+" "+String(j), Number(WidthSetting.text), Number(HeightSetting.text), 1, 120, Number(FpsSetting.text));}
+                else{var NewComp = app.project.items.addComp("NewComp(RPP2AEP) "+String(j), Number(WidthSetting.text),  Number(HeightSetting.text), 1, 120, Number(FpsSetting.text));}
                 NewComp.parentFolder =R2AParentFolder;
                 ExpFlag=0;
             }
@@ -88,25 +102,31 @@
                 if(ItemDuration<RPPItem[i][1]&&addedlayer.canSetTimeRemapEnabled){addedlayer.timeRemapEnabled=true;}
                 addedlayer.outPoint =Number(RPPItem[i][1])+addedlayer.startTime;
             }else if (GenerateMode.selection.index==1){
+                if(FirstItemFlag==1&&RPPItem[i][0]-Number(StartPosSetting.text)!=0&&LastItemFlag!=1){ // トラック最初のアイテムが0秒開始じゃなかった場合割り込み処理
+                    var added1stlayer = NewComp.layers.add(FootageAndCompObj[SelecdetItemiD]);
+                    added1stlayer.startTime=0;
+                    added1stlayer.timeRemapEnabled=true;
+                    added1stlayer.outPoint =Number(RPPItem[i][0]);
+                    var AddedEffFlip2 = added1stlayer.property("ADBE Effect Parade").addProperty("ADBE Geometry2");
+                    AddedEffFlip2.property("ADBE Geometry2-0011").setValue(0);
+                    AddedEffFlip2.property("ADBE Geometry2-0004").setValue(-100);
+                }
                 // 長さの調整（隙間なく生成する）
                 var addedlayer = NewComp.layers.add(FootageAndCompObj[SelecdetItemiD]);
                 addedlayer.inPoint=Number(StartPosSetting.text);
                 addedlayer.startTime=RPPItem[i][0]-addedlayer.inPoint;
                 //尺が足りないかの判定 足りないならタイムリマップ有効。
-                if(ItemDuration<RPPItem[i][1]&&addedlayer.canSetTimeRemapEnabled){addedlayer.timeRemapEnabled=true;}
-                if(FirstItemFlag==1&&addedlayer.startTime!=0&&LastItemFlag!=1){ // トラック最初のアイテムが0秒開始じゃなかった場合割り込み処理
-                    //トラックにアイテムが1個の場合無限ループに入るためLastItemFlag!=1で除外
-                    addedlayer.startTime=0;
-                    addedlayer.outPoint =Number(RPPItem[i][0]);
-                    var AddedEffFlip = addedlayer.property("ADBE Effect Parade").addProperty("ADBE Geometry2");
-                    AddedEffFlip.property("ADBE Geometry2-0011").setValue(0);
-                    AddedEffFlip.property("ADBE Geometry2-0004").setValue(-100);
-                    i--;
-                }else if(LastItemFlag==1){
-                    addedlayer.outPoint =Number(RPPItem[i][1])+addedlayer.startTime;
-                }else{
-                    addedlayer.outPoint =Number(RPPItem[i+1][0]);//次のアイテムの頭まで伸ばす
+                if(addedlayer.canSetTimeRemapEnabled&&LastItemFlag!=1){
+                    if(ItemDuration<RPPItem[i+1][0]-RPPItem[i][0]){addedlayer.timeRemapEnabled=true;}
+                    
+                    addedlayer.outPoint =Number(RPPItem[i+1][0]);
                 }
+
+                if(LastItemFlag==1&&addedlayer.canSetTimeRemapEnabled){
+                    addedlayer.timeRemapEnabled=true;
+                    addedlayer.outPoint =Number(RPPItem[i][1])+addedlayer.startTime+120; //最後まで伸ばす とりあえず適当に120秒分
+                }
+
             }else if(GenerateMode.selection.index==2){//アイテムの長さを調整しない(素材=Footage/Compositeのママ)
                 var addedlayer = NewComp.layers.add(FootageAndCompObj[SelecdetItemiD]);
                 addedlayer.inPoint=Number(StartPosSetting.text); // レイヤーの再生開始位置 空白になっていてもNumber関数は0を返す
@@ -202,7 +222,7 @@
     function run2(){
         var selectComp = app.project.selection;
         if(selectComp.length == 1&&selectComp[0] instanceof CompItem){
-            if(selectComp[0].selectedProperties.length==0){alert("Select a Layer and Propaties");return;}
+            if(selectComp[0].selectedProperties.length==0){alert(UItext["AlertSeceltLayerText"][UILanguage]);return;}
             if(selectComp[0].selectedLayers[0].canSetTimeRemapEnabled){
                 selectComp[0].selectedLayers[0].timeRemapEnabled=true;
                 selectComp[0].selectedLayers[0].property("Time Remap").expression='//When you want to set value,please disable expression temporarily. \
@@ -243,8 +263,10 @@
 
         }else{alert("Select a Compotision and Propaties")}
     }
-    function setting(){
+    function UIsetting(){
         //GetFootageItem
+        if(app.project.activeItem){var ActiveCompID = app.project.activeItem.id;}
+        var ActiveCompName = "";
 
         for(var i =0;app.project.items.length>i;i++){
             if(app.project.items[i+1] instanceof FootageItem ||app.project.items[i+1] instanceof CompItem){
@@ -253,6 +275,14 @@
             }else if(app.project.items[i+1] instanceof FolderItem && app.project.items[i+1].name=="RPPtoAEP"){
                 FolderObj.push(app.project.items[i+1]);
             }
+
+        }
+        for(var k=0;FootageAndCompObj.length>k;k++){
+            // 選択中コンポの取得
+            if(ActiveCompID && ActiveCompID == FootageAndCompObj[k].id){
+                SelecdetItemiD = k;
+                ActiveCompName = FootageAndCompObj[k+1].name;
+            }
         }
         // SET UI
         var w = new Window('dialog',"RPPtoAEP");
@@ -260,12 +290,12 @@
         GUIItemGroup.orientation = "column";
         GUIItemGroup.add("statictext",undefined,"RPPtoAEP Setting");
         var GUIItemGroupFileLoad = GUIItemGroup.add("group");
-        GUIItemGroupFileLoad.add("statictext",undefined,".RPP");
-        var RPPpathset = GUIItemGroupFileLoad.add("statictext",undefined,"");
+        GUIItemGroupFileLoad.add("statictext",undefined,UItext["UISelectFile"][UILanguage]);
+        var RPPpathset = GUIItemGroupFileLoad.add("statictext",undefined,RPPpath);
         RPPpathset.characters = 20;
         var RPPload = GUIItemGroupFileLoad.add('button',undefined, '...');
         RPPload.onClick= function () {
-            RPPpath = File.openDialog("Select .RPP file", "*.rpp")
+            RPPpath = File.openDialog(UItext["UISelectFile2"][UILanguage], "*.rpp")
             if (RPPpath == null){alert("error");return -1;}
             RPPpathset.text= RPPpath;
         }
@@ -277,35 +307,47 @@
         
         var GUIItemGroup1_2 =  GUIItemGroupLR.add("group");
         GUIItemGroup1_2.orientation="row";
-        GenerateMode2=GUIItemGroup1_2.add('dropdownlist', undefined, ["Generate New Composition","Generate Keyframe"]);
+        GenerateMode2=GUIItemGroup1_2.add('dropdownlist', undefined, [UItext["UIGenerateMode1"][UILanguage],UItext["UIGenerateMode2"][UILanguage]]);
         GenerateMode2.selection=0;
 
         var GUIItemGroup1 =  GUIItemGroupLR.add("group")
         GUIItemGroup1.orientation="row";
-        GUIItemGroup1.add("statictext",undefined,"Select Item");
+        GUIItemGroup1.add("statictext",undefined,UItext["UISelectItem"][UILanguage]);
         w.menu= GUIItemGroup1.add('dropdownlist', undefined, FootageAndComp);
+
+        w.menu.onChange = function(){
+            if(app.project.items[w.menu.selection.index+1] instanceof CompItem){
+                WidthSetting.text = FootageAndCompObj[w.menu.selection.index+1].width;
+                HeightSetting.text=FootageAndCompObj[w.menu.selection.index+1].height;
+                NewConpNameSetting.text = w.menu.selection.text+"-r2a"
+            }else{
+                WidthSetting.text = "1920";
+                HeightSetting.text="1080";
+                NewConpNameSetting.text = w.menu.selection.text+"-r2a"
+            }
+        }
 
         var GUIItemGroup2 =  GUIItemGroupLR.add("group")
         GUIItemGroup2.orientation="row";
-        GUIItemGroup2.add("statictext",undefined,"Composition Name");
-        NewConpNameSetting = GUIItemGroup2.add("edittext",undefined,"")
+        GUIItemGroup2.add("statictext",undefined,UItext["UICompName"][UILanguage]);
+        NewConpNameSetting = GUIItemGroup2.add("edittext",undefined,ActiveCompName+"-r2a")
         NewConpNameSetting.characters = 10;
 
         var GUIItemGroup7 =  GUIItemGroupLR.add("group")
         GUIItemGroup7.orientation="row";
-        GUIItemGroup7.add("statictext",undefined,"width : ");
-        WidthSetting = GUIItemGroup7.add("edittext",undefined,"1920");
+        GUIItemGroup7.add("statictext",undefined,UItext["UIWidth"][UILanguage]);
+        WidthSetting = GUIItemGroup7.add("edittext",undefined,WidthSettingValue);
         WidthSetting.characters = 4;
-        GUIItemGroup7.add("statictext",undefined,"haight : ");
-        HaightSetting = GUIItemGroup7.add("edittext",undefined,"1080");
-        HaightSetting.characters = 4;
+        GUIItemGroup7.add("statictext",undefined,UItext["UIHeight"][UILanguage]);
+        HeightSetting = GUIItemGroup7.add("edittext",undefined,HeightSettingValue);
+        HeightSetting.characters = 4;
         GUIItemGroup7.add("statictext",undefined,"fps : ");
         FpsSetting = GUIItemGroup7.add("edittext",undefined,"60");
         FpsSetting.characters = 4;
 
         var GUIItemGroup3 =  GUIItemGroupLR.add("group")
         GUIItemGroup3.orientation="row";
-        GUIItemGroup3.add("statictext",undefined,"Start Position");
+        GUIItemGroup3.add("statictext",undefined,UItext["UIStartPosition"][UILanguage]);
         StartPosSetting = GUIItemGroup3.add("edittext",undefined,"");
         StartPosSetting.characters = 3;
         StartPosSetting.text="0"
@@ -313,22 +355,24 @@
         var GUIItemGroup4 =  GUIItemGroupLR.add("group")
         GUIItemGroup4.orientation="row";
         //GUIItemGroup4.add("statictext",undefined,"Flip left/right");
-        ChkFlipSetting = GUIItemGroup4.add("checkbox",undefined,"Flip left/right");
+        ChkFlipSetting = GUIItemGroup4.add("checkbox",undefined,UItext["UIFlipLR"][UILanguage]);
+        ChkFlipSetting.value = true;
 
         var GUIItemGroup5 =  GUIItemGroupLR.add("group")
         GUIItemGroup5.orientation="row";
         //GUIItemGroup4.add("statictext",undefined,"Flip left/right");
-        LinkPropSetting = GUIItemGroup5.add("checkbox",undefined,"Link Properties");
-        OddItemSetting = GUIItemGroup5.add("checkbox",undefined,"Odd Item Link Separately");
+        LinkPropSetting = GUIItemGroup5.add("checkbox",undefined,UItext["UILinkProperties"][UILanguage]);
+        LinkPropSetting.value = true;
+        OddItemSetting = GUIItemGroup5.add("checkbox",undefined,UItext["UILinkProperties2"][UILanguage]);
         
         var GUIItemGroup6 =  GUIItemGroupLR.add("group")
         GUIItemGroup6.orientation="row";
-        GUIItemGroup6.add("statictext",undefined,"Generate Mode: ");
-        GenerateMode=GUIItemGroup6.add('dropdownlist', undefined, ["Generate as per RPP","Without Gaps","Don't Ajust Item Length"]);
+        GUIItemGroup6.add("statictext",undefined,UItext["UIGenerateMode"][UILanguage]);
+        GenerateMode=GUIItemGroup6.add('dropdownlist', undefined, [UItext["UIGenerateMode1"][UILanguage],UItext["UIGenerateMode2"][UILanguage],UItext["UIGenerateMode3"][UILanguage]]);
         GenerateMode.selection=1;
 
 
-        w.btn = w.add('button', {x:0, y:0, width:130, height:26}, 'RUN', {name:'ok'});
+        w.btn = w.add('button', {x:0, y:0, width:130, height:26}, UItext["UIRUN"][UILanguage], {name:'ok'});
         w.btn.onClick= function () {
             w.close();
             SelecdetItemiD = w.menu.selection.index;
@@ -358,7 +402,8 @@
             }
         }
         
-        w.menu.selection= 0;
+        w.menu.selection= SelecdetItemiD;
         w.show();
     }
+
 }
